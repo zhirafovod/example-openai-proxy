@@ -1,0 +1,33 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+extensions: 
+  # Documentation on setting up your oauth2 with AppD CNAO
+  # https://docs.appdynamics.com/fso/cloud-native-app-obs/en/kubernetes-and-app-service-monitoring/application-performance-monitoring-with-opentelemetry/configure-services-running-outside-of-a-supported-kubernetes-cluster
+  oauth2client:
+    client_id: <your-client-id>
+    client_secret: <your-client-secret>
+    token_url: <your-token-utl>
+exporters:
+  logging:
+    loglevel: debug
+  otlphttp: 
+    auth:
+      authenticator: oauth2client
+    traces_endpoint: https://<your-tenant-url>/data/v1/trace
+    metrics_endpoint: https://<your-tenant-url>/data/v1/metrics
+service:
+  extensions: #### Mandatory for AppD Cloud
+    - oauth2client
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [logging, otlphttp]
+    metrics: 
+      receivers: [otlp]
+      exporters: [logging, otlphttp]
+  telemetry:
+    logs:
+      level: "debug"
