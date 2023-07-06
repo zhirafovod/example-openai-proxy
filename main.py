@@ -33,8 +33,3 @@ async def create_chat_completion(deployment_id: str, chat_completion: ChatComple
     )
 
     return response
-
-# if __name__ == "__main__":
-#     ptvsd.enable_attach(address=('localhost', 5678))
-#     ptvsd.wait_for_attach()  # Only include this line if you want to wait until debugger is attached before running your application.
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
