@@ -3,3 +3,6 @@ uvicorn
 requests
 openai
 ptvsd
+opentelemetry-distro
+opentelemetry-exporter-otlp
+opentelemetry-instrumentation-fastapi
