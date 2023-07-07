@@ -6,3 +6,9 @@ ptvsd
 opentelemetry-distro
 opentelemetry-exporter-otlp
 opentelemetry-instrumentation-fastapi
+
+# below is required for testing
+requests
+numpy
+faker
+schedule
