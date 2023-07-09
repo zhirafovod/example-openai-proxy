@@ -4,14 +4,14 @@ from typing import Optional
 import openai
 from api.models.chat_completion import ChatCompletion
 
-# Import OpenTelemetry and helper functions from separate files
+# Import OpenTelemetry and helper functions
 from api.utils.otel_instrumentation import tracer, tokens_counter, prompt_tokens_counter, completion_tokens_counter
 from api.utils.helpers import mask_api_key
 
 router = APIRouter()
 
 @router.post("/")
-async def create_chat_completion(deployment_id: str, chat_completion: ChatCompletion, request: Request, api_version: Optional[str] = "2023-05-15"):
+async def create_chat_completion(chat_completion: ChatCompletion, request: Request, deployment_id: Optional[str] = "default-deployment", api_version: Optional[str] = "2023-05-15"):
     # Get the API key from the request headers
     api_key = request.headers.get('openai-api-key')
     

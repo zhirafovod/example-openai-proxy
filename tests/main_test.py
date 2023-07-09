@@ -23,4 +23,19 @@ def test_chat_completion():
     assert "Los Angeles Dodgers" in chat_completion['choices'][0]['message']['content'], "Incorrect or missing information"
     print(f"response={chat_completion}")
 
+
+def test_regular_completion():
+    data = {
+        "deployment_id": "your-deployment-id",
+        "model": "text-davinci-003",
+        "prompt": "Who won the world series in 2020?"
+    }
+
+    regular_completion = openai.Completion.create(**data)
+
+    assert "Los Angeles Dodgers" in regular_completion['choices'][0]['text'].strip(), "Incorrect or missing information"
+    print(f"response={regular_completion}")
+
+
 test_chat_completion()
+test_regular_completion()
