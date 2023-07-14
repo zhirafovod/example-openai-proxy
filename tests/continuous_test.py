@@ -5,6 +5,15 @@ import time
 import random
 import threading
 
+from opentelemetry import trace
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+
+from api.utils.otel_instrumentation import tracer, tokens_counter, prompt_tokens_counter, completion_tokens_counter
+
+RequestsInstrumentor().instrument()
+
+
 NUM_THREADS = 3
 MODELS = ['text-davinci-003', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo']
 
@@ -12,7 +21,6 @@ faker = Faker()
 openai.api_type = "azure"
 openai.api_base = "http://localhost:8000"  # Adjust to your Azure FastAPI server address
 openai.api_version = "2023-05-15"
-
 
 def make_request():
     openai.api_key = "fake-one"
@@ -35,23 +43,29 @@ def make_request():
             num_words = np.random.randint(1, 4)  # Randomly generate a length from 1 to 3
             sentence = faker.sentence(nb_words=num_words, variable_nb_words=False)
             messages.append({"role": "user", "content": f"""Respond only with 3 words or less to this sentence="{sentence}"."""})
-            
-            if model != 'text-davinci-003':
-                data = {
-                    "deployment_id": "your-deployment-id",
-                    "model": model,
-                    "messages": messages
-                }
-                chat_completion = openai.ChatCompletion.create(**data)
-                response_text = chat_completion.choices[0].message['content']
-            else:
-                data = {
-                    "deployment_id": "your-deployment-id",
-                    "model": model,  # Specify engine here
-                    "prompt": sentence,
-                }
-                chat_completion = openai.Completion.create(**data)
-                response_text = chat_completion.choices[0].text.strip()
+
+            with tracer.start_as_current_span("openai_chat_completion"):
+                if model != 'text-davinci-003':
+                    data = {
+                        "deployment_id": "your-deployment-id",
+                        "model": model,
+                        "messages": messages
+                    }
+                    chat_completion = openai.ChatCompletion.create(**data)
+                    response_text = chat_completion.choices[0].message['content']
+                else:
+                    data = {
+                        "deployment_id": "your-deployment-id",
+                        "model": model,  # Specify engine here
+                        "prompt": sentence,
+                    }
+                    chat_completion = openai.Completion.create(**data)
+                    response_text = chat_completion.choices[0].text.strip()
+
+            attributes = {"model": model, "chat_completion_id": chat_completion.id, "api_key": openai.api_key}
+            tokens_counter.add(chat_completion.usage['total_tokens'], attributes)
+            prompt_tokens_counter.add(chat_completion.usage['prompt_tokens'], attributes)
+            completion_tokens_counter.add(chat_completion.usage['completion_tokens'], attributes)
 
             # Random delay between 30 and 90 seconds
             time_delay = random.randint(30, 90)

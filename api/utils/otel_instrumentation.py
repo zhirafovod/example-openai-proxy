@@ -1,5 +1,5 @@
 from opentelemetry import trace, metrics
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.trace import TracerProvider
 
 # Configure OpenTelemetry
