@@ -8,7 +8,9 @@ from opentelemetry.sdk.trace import TracerProvider
 
 import os
 import requests
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 from api.models.completion import Completion
 
@@ -30,7 +32,7 @@ async def create_completion(deployment_id: str, completion: Completion, request:
     with tracer.start_as_current_span("openai_completion"):
         data = filter_none_values(completion)
         print(f"completion={completion}, data={data}")
-        response = openai.Completion.create(**data)
+        response = client.completions.create(**data)
 
         # example response
         # 
@@ -54,13 +56,13 @@ async def create_completion(deployment_id: str, completion: Completion, request:
         # }        
 
         print(f"response={response}")
-        attributes = {"model": completion.model, "completion_id": response['id'], "api_key": api_key}
+        attributes = {"model": completion.model, "completion_id": response.id, "api_key": api_key}
         # Increment the counter for the number of tokens generated
         # Add the API key to the metrics labels
-        tokens_counter.add(response['usage']['total_tokens'], attributes)
+        tokens_counter.add(response.usage.total_tokens, attributes)
 
         # Record the prompt tokens
         # Add the completion ID to the metrics labels
-        prompt_tokens_counter.add(response['usage']['prompt_tokens'], attributes)
+        prompt_tokens_counter.add(response.usage.prompt_tokens, attributes)
     
     return response

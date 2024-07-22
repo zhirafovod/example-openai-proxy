@@ -1,4 +1,9 @@
-import openai
+from openai import AzureOpenAI
+
+client = AzureOpenAI(azure_endpoint="http://localhost:8000",
+api_version="2023-05-15",
+api_key="fake-one",
+api_key="fake-one-" + str(np.random.randint(1, 10)))
 import numpy as np
 from faker import Faker
 import time
@@ -18,16 +23,12 @@ NUM_THREADS = 3
 MODELS = ['text-davinci-003', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo']
 
 faker = Faker()
-openai.api_type = "azure"
-openai.api_base = "http://localhost:8000"  # Adjust to your Azure FastAPI server address
-openai.api_version = "2023-05-15"
+  # Adjust to your Azure FastAPI server address
 
 def make_request():
-    openai.api_key = "fake-one"
 
     num_messages = 100
     # select a random api_key to use
-    openai.api_key = "fake-one-" + str(np.random.randint(1, 10))
 
     while True:
         model = np.random.choice(MODELS)
@@ -51,21 +52,21 @@ def make_request():
                         "model": model,
                         "messages": messages
                     }
-                    chat_completion = openai.ChatCompletion.create(**data)
-                    response_text = chat_completion.choices[0].message['content']
+                    chat_completion = client.chat.completions.create(**data)
+                    response_text = chat_completion.choices[0].message.content
                 else:
                     data = {
                         "deployment_id": "your-deployment-id",
                         "model": model,  # Specify engine here
                         "prompt": sentence,
                     }
-                    chat_completion = openai.Completion.create(**data)
+                    chat_completion = client.completions.create(**data)
                     response_text = chat_completion.choices[0].text.strip()
 
             attributes = {"model": model, "chat_completion_id": chat_completion.id, "api_key": openai.api_key}
-            tokens_counter.add(chat_completion.usage['total_tokens'], attributes)
-            prompt_tokens_counter.add(chat_completion.usage['prompt_tokens'], attributes)
-            completion_tokens_counter.add(chat_completion.usage['completion_tokens'], attributes)
+            tokens_counter.add(chat_completion.usage.total_tokens, attributes)
+            prompt_tokens_counter.add(chat_completion.usage.prompt_tokens, attributes)
+            completion_tokens_counter.add(chat_completion.usage.completion_tokens, attributes)
 
             # Random delay between 30 and 90 seconds
             time_delay = random.randint(30, 90)
